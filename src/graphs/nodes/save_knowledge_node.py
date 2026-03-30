@@ -108,7 +108,22 @@ def save_knowledge_node(
         
         # 步骤2: 检查知识库中是否已有相似内容
         knowledge_client = KnowledgeClient(ctx=ctx)
-        knowledge_table = os.getenv("KNOWLEDGE_TABLE_NAME", "Car_Seat")
+        
+        # 获取知识库名称（优先级：环境变量 > 配置文件 > 默认值）
+        knowledge_table = os.getenv("KNOWLEDGE_TABLE_NAME")
+        
+        if not knowledge_table:
+            # 尝试从配置文件读取
+            config_path = "data/knowledge_table.json"
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        config_data = json.load(f)
+                        knowledge_table = config_data.get("table_name", "Car_Seat")
+                except Exception:
+                    knowledge_table = "Car_Seat"
+            else:
+                knowledge_table = "Car_Seat"
         
         # 提取关键内容进行相似度检索
         search_query = raw_content[:200]  # 用前200字符检索

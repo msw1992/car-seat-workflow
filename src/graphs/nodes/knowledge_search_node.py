@@ -1,5 +1,6 @@
 """知识库检索节点 - 从长期记忆库检索相关内容"""
 import os
+import json
 from typing import List, Any
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
@@ -37,8 +38,21 @@ def knowledge_search_node(
     if search_keywords:
         query = " ".join(search_keywords[:3])  # 取前3个标题作为查询
     
-    # 从环境变量获取知识库名称，默认为 Car_Seat
-    knowledge_table = os.getenv("KNOWLEDGE_TABLE_NAME", "Car_Seat")
+    # 获取知识库名称（优先级：环境变量 > 配置文件 > 默认值）
+    knowledge_table = os.getenv("KNOWLEDGE_TABLE_NAME")
+    
+    if not knowledge_table:
+        # 尝试从配置文件读取
+        config_path = "data/knowledge_table.json"
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+                    knowledge_table = config_data.get("table_name", "Car_Seat")
+            except Exception:
+                knowledge_table = "Car_Seat"
+        else:
+            knowledge_table = "Car_Seat"
     
     knowledge_results: List[Any] = []
     
@@ -46,7 +60,7 @@ def knowledge_search_node(
         # 从指定的知识库检索相关内容
         response = client.search(
             query=query,
-            table_names=[knowledge_table],  # 指定知识库 Car_Seat
+            table_names=[knowledge_table],  # 指定知识库
             top_k=10,  # 检索10条相关知识
             min_score=0.5  # 相似度阈值
         )
@@ -62,7 +76,7 @@ def knowledge_search_node(
                 
             print(f"✅ 从知识库 '{knowledge_table}' 检索到 {len(knowledge_results)} 条相关知识")
         else:
-            print(f"⚠️  知识库 '{knowledge_table}' 未检索到相关知识")
+            print(f"⚠️  知识库 '{knowledge_table}' 未检索到相关知识（可能是新知识库）")
             
     except Exception as e:
         # 记录错误但继续执行
