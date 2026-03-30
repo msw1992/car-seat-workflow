@@ -54,8 +54,36 @@
 - **工作流API**: http://localhost:5000/run
 - **日志位置**: /tmp/seat_push_scheduler.log
 
-**查看配置状态：**
+**⚠️ 重要：后台运行说明**
+
+关闭网页/终端后，定时任务是否继续执行取决于启动方式：
+
+| 启动方式 | 关闭网页后 | 推荐场景 |
+|---------|-----------|---------|
+| `bash start_scheduler.sh` | ❌ 会停止 | 临时测试 |
+| `bash start_scheduler_daemon.sh` | ✅ 继续运行 | **生产环境推荐** |
+
+**启动定时服务（后台运行）：**
 ```bash
+# 1. 先启动工作流HTTP服务
+python src/main.py -m http -p 5000 &
+
+# 2. 启动定时调度服务（后台运行，关闭网页也不会停止）
+bash start_scheduler_daemon.sh
+```
+
+**管理命令：**
+```bash
+# 查看服务状态
+bash scripts/scheduler_status.sh
+
+# 查看实时日志
+tail -f /tmp/seat_push_scheduler.log
+
+# 停止服务
+bash scripts/stop_scheduler.sh
+
+# 检查配置
 python scripts/check_schedule.py
 ```
 
@@ -65,19 +93,13 @@ python scripts/check_schedule.py
 export SCHEDULE_HOUR="9"
 export SCHEDULE_MINUTE="00"
 
-# 方式2：修改 start_scheduler.sh（永久）
-# 取消注释并修改环境变量
+# 方式2：修改启动脚本（永久）
+# 编辑 start_scheduler_daemon.sh，取消注释并修改环境变量
 ```
 
-**启动定时服务：**
+**查看配置状态：**
 ```bash
-# 1. 先启动工作流HTTP服务
-python src/main.py -m http -p 5000 &
-
-# 2. 启动定时调度服务
-bash start_scheduler.sh
-# 或
-python src/scheduler/scheduler_service.py
+python scripts/check_schedule.py
 ```
 
 ## 技能使用
