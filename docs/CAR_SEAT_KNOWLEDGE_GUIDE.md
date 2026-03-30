@@ -46,19 +46,24 @@ python src/main.py -m flow
 ### 方式一：使用CLI命令
 
 ```bash
-# 导入文本知识
+# 导入文本知识（注意：参数是 --dataset，不是 --table-name）
 coze-coding-ai knowledge add \
-  --table-name Car_Seat \
+  --dataset "Car_Seat" \
   --content "汽车座椅智能化趋势：AI自适应调节、健康监测、场景联动、个性化定制"
+
+# 或使用简写
+coze-coding-ai knowledge add \
+  -d "Car_Seat" \
+  -c "汽车座椅智能化趋势：AI自适应调节、健康监测、场景联动、个性化定制"
 
 # 导入URL知识
 coze-coding-ai knowledge add \
-  --table-name Car_Seat \
+  --dataset "Car_Seat" \
   --url "https://example.com/seat-innovation-report"
 
 # 批量导入
 coze-coding-ai knowledge add \
-  --table-name Car_Seat \
+  --dataset "Car_Seat" \
   --content "$(cat your_knowledge.txt)"
 ```
 
@@ -69,7 +74,7 @@ from coze_coding_dev_sdk import KnowledgeClient, KnowledgeDocument, DataSourceTy
 
 client = KnowledgeClient()
 
-# 添加知识
+# 添加知识（注意：参数是 table_name，不是 dataset）
 docs = [
     KnowledgeDocument(
         source=DataSourceType.TEXT,
@@ -84,7 +89,7 @@ docs = [
 
 response = client.add_documents(
     documents=docs,
-    table_name="Car_Seat"
+    table_name="Car_Seat"  # Python SDK 使用 table_name
 )
 
 print(f"✅ 已添加 {len(response.doc_ids)} 条知识到 Car_Seat")
@@ -217,7 +222,7 @@ coze-coding-ai knowledge add --table-name Car_Seat --content "..."
 ```bash
 # 自动创建知识库（添加时会自动创建）
 coze-coding-ai knowledge add \
-  --table-name Car_Seat \
+  --dataset "Car_Seat" \
   --content "第一条知识"
 ```
 
