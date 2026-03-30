@@ -1,6 +1,7 @@
 ## 项目概述
 - **名称**: 汽车座椅产品规划每日资讯推送工作流
 - **功能**: 每日自动搜索汽车座椅领域最新资讯，通过AI分析生成产品规划建议，并推送到飞书群
+- **支持**: 完全自动化定时推送（无需人工干预）
 
 ### 节点清单
 | 节点名 | 文件位置 | 类型 | 功能描述 | 分支逻辑 | 配置文件 |
@@ -13,6 +14,17 @@
 
 ## 子图清单
 无子图
+
+## 定时调度服务
+| 服务名 | 文件位置 | 功能描述 | 执行时间 |
+|-------|---------|---------|---------|
+| scheduler_service | `src/scheduler/scheduler_service.py` | 独立定时调度服务，自动触发工作流 | 每天8:30 |
+
+### 定时服务配置
+- **时区**: Asia/Shanghai (北京时间)
+- **执行时间**: 每天 08:30 (可通过环境变量配置)
+- **工作流API**: http://localhost:5000/run
+- **日志位置**: /tmp/seat_push_scheduler.log
 
 ## 技能使用
 - 节点`search_node`使用技能 web-search
@@ -30,9 +42,44 @@
 3. **飞书推送节点**: 将分析结果以富文本形式推送到飞书群
 
 ## 定时触发说明
-本工作流本身不具备定时触发能力，需要通过外部调度服务实现每日8:30自动执行：
-- **推荐方案**: 使用云函数定时触发器（如阿里云函数计算、腾讯云SCF）在每天8:30调用工作流API
-- **手动触发**: 运行 `python src/main.py` 即可手动执行一次推送
+
+### 方案一：使用独立定时服务（推荐）
+
+**启动方式：**
+```bash
+# 1. 先启动工作流HTTP服务
+python src/main.py -m http -p 5000 &
+
+# 2. 启动定时调度服务
+bash start_scheduler.sh
+# 或直接运行
+python src/scheduler/scheduler_service.py
+```
+
+**配置项（环境变量）：**
+- `WORKFLOW_API_URL`: 工作流API地址（默认: http://localhost:5000/run）
+- `SCHEDULE_HOUR`: 执行小时（默认: 8）
+- `SCHEDULE_MINUTE`: 执行分钟（默认: 30）
+
+**服务特点：**
+- ✅ 完全自动化，无需人工干预
+- ✅ 独立进程，不影响工作流主服务
+- ✅ 自动重试，容错性强
+- ✅ 完整日志记录
+
+### 方案二：使用平台定时触发器
+本工作流支持 Coze 平台自带的定时触发功能，在平台配置即可。
+
+### 方案三：使用系统服务（生产环境推荐）
+将定时服务配置为系统服务，开机自启动：
+```bash
+# 复制服务文件
+sudo cp scripts/deploy_scheduler.sh /etc/systemd/system/seat-push.service
+
+# 启用并启动服务
+sudo systemctl enable seat-push
+sudo systemctl start seat-push
+```
 
 ## 输出内容
 工作流会在飞书群推送包含以下内容的消息：
