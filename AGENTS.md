@@ -50,9 +50,35 @@
 
 ### 定时服务配置
 - **时区**: Asia/Shanghai (北京时间)
-- **执行时间**: 每天 08:30 (可通过环境变量配置)
+- **执行时间**: 每天 08:30 (已配置)
 - **工作流API**: http://localhost:5000/run
 - **日志位置**: /tmp/seat_push_scheduler.log
+
+**查看配置状态：**
+```bash
+python scripts/check_schedule.py
+```
+
+**修改执行时间：**
+```bash
+# 方式1：环境变量（临时）
+export SCHEDULE_HOUR="9"
+export SCHEDULE_MINUTE="00"
+
+# 方式2：修改 start_scheduler.sh（永久）
+# 取消注释并修改环境变量
+```
+
+**启动定时服务：**
+```bash
+# 1. 先启动工作流HTTP服务
+python src/main.py -m http -p 5000 &
+
+# 2. 启动定时调度服务
+bash start_scheduler.sh
+# 或
+python src/scheduler/scheduler_service.py
+```
 
 ## 技能使用
 - 节点`search_node`使用技能 web-search
