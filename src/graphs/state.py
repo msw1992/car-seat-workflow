@@ -8,6 +8,7 @@ class GlobalState(BaseModel):
     search_results: List[dict] = Field(default=[], description="搜索结果列表")
     analysis_result: dict = Field(default={}, description="分析后的结构化结果")
     push_status: str = Field(default="", description="推送状态")
+    save_status: str = Field(default="", description="知识库保存状态")
 
 
 class GraphInput(BaseModel):
@@ -19,6 +20,7 @@ class GraphOutput(BaseModel):
     """工作流输出"""
     push_status: str = Field(..., description="推送状态")
     analysis_result: dict = Field(..., description="分析结果")
+    save_status: str = Field(default="", description="知识库保存状态")
 
 
 class SearchNodeInput(BaseModel):
@@ -61,3 +63,14 @@ class FeishuPushNodeInput(BaseModel):
 class FeishuPushNodeOutput(BaseModel):
     """飞书推送节点输出"""
     push_status: str = Field(..., description="推送状态")
+
+
+class SaveKnowledgeNodeInput(BaseModel):
+    """知识库保存节点输入"""
+    analysis_result: dict = Field(..., description="分析结果")
+
+
+class SaveKnowledgeNodeOutput(BaseModel):
+    """知识库保存节点输出"""
+    save_status: str = Field(default="", description="保存状态")
+    saved_content: str = Field(default="", description="已保存的内容摘要")

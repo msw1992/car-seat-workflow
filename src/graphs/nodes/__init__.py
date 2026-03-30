@@ -3,10 +3,12 @@ from graphs.nodes.search_node import search_node
 from graphs.nodes.knowledge_search_node import knowledge_search_node
 from graphs.nodes.analysis_node import analysis_node
 from graphs.nodes.feishu_push_node import feishu_push_node
+from graphs.nodes.save_knowledge_node import save_knowledge_node
 
 __all__ = [
     "search_node",
     "knowledge_search_node",
     "analysis_node",
-    "feishu_push_node"
+    "feishu_push_node",
+    "save_knowledge_node"
 ]
