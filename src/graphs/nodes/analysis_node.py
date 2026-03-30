@@ -56,9 +56,31 @@ def analysis_node(
             search_content += f"详细总结：{summary}\n"
         search_content += "-" * 80 + "\n"
     
+    # 准备知识库检索结果文本
+    knowledge_content = ""
+    knowledge_results = state.knowledge_results
+    
+    if knowledge_results:
+        knowledge_content = "\n\n" + "=" * 80 + "\n"
+        knowledge_content += "📚 长期记忆库相关知识\n"
+        knowledge_content += "=" * 80 + "\n"
+        
+        for idx, result in enumerate(knowledge_results, 1):
+            content_text = result.get("content", "")
+            score = result.get("score", 0.0)
+            
+            knowledge_content += f"\n【知识{idx}】（相关度: {score:.2f}）\n"
+            knowledge_content += f"{content_text}\n"
+            knowledge_content += "-" * 80 + "\n"
+    else:
+        knowledge_content = "\n\n（未从长期记忆库检索到相关知识）"
+    
     # 使用Jinja2渲染用户提示词
     up_tpl = Template(up)
-    user_prompt = up_tpl.render({"search_content": search_content})
+    user_prompt = up_tpl.render({
+        "search_content": search_content,
+        "knowledge_content": knowledge_content
+    })
     
     # 初始化LLM客户端
     client = LLMClient(ctx=ctx)
@@ -97,6 +119,7 @@ def analysis_node(
     analysis_result = {
         "raw_content": analysis_text,
         "search_count": len(search_results),
+        "knowledge_count": len(knowledge_results),
         "timestamp": ""  # 可以添加时间戳
     }
     

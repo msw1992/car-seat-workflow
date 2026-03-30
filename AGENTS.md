@@ -7,7 +7,8 @@
 | 节点名 | 文件位置 | 类型 | 功能描述 | 分支逻辑 | 配置文件 |
 |-------|---------|------|---------|---------|---------|
 | search_node | `nodes/search_node.py` | task | 搜索汽车座椅产品规划相关资讯 | - | - |
-| analysis_node | `nodes/analysis_node.py` | agent | 使用大模型分析资讯并生成产品规划建议 | - | `config/seat_analysis_llm_cfg.json` |
+| knowledge_search_node | `nodes/knowledge_search_node.py` | task | 从Coze长期记忆库检索相关知识 | - | - |
+| analysis_node | `nodes/analysis_node.py` | agent | 结合网络资讯和知识库内容，生成产品规划建议 | - | `config/seat_analysis_llm_cfg.json` |
 | feishu_push_node | `nodes/feishu_push_node.py` | task | 将分析结果推送到飞书群 | - | - |
 
 **类型说明**: task(task节点) / agent(大模型) / condition(条件分支) / looparray(列表循环) / loopcond(条件循环)
@@ -28,18 +29,20 @@
 
 ## 技能使用
 - 节点`search_node`使用技能 web-search
+- 节点`knowledge_search_node`使用技能 knowledge
 - 节点`analysis_node`使用技能 llm
 - 节点`feishu_push_node`使用技能 feishu-message
 
 ## 工作流程
 ```
-搜索节点 → 分析节点 → 飞书推送节点
+搜索节点 → 知识库检索节点 → 分析节点 → 飞书推送节点
 ```
 
 ### 执行步骤
-1. **搜索节点**: 使用多个关键词搜索最近1天的汽车座椅资讯，去重后保留15条
-2. **分析节点**: 以座椅产品规划专家视角分析资讯，生成结构化报告（包含趋势洞察、创新方向、重点关注）
-3. **飞书推送节点**: 将分析结果以富文本形式推送到飞书群
+1. **搜索节点**: 使用多个关键词搜索最近一周的汽车座椅资讯，去重后保留20条
+2. **知识库检索节点**: 从Coze长期记忆库中检索相关的历史知识（最多10条）
+3. **分析节点**: 结合网络资讯和知识库内容，以座椅产品规划专家视角生成综合分析报告
+4. **飞书推送节点**: 将分析结果以富文本形式推送到飞书群，标题包含当日日期
 
 ## 定时触发说明
 

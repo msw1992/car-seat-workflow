@@ -6,6 +6,7 @@ from graphs.state import (
     GraphOutput
 )
 from graphs.nodes.search_node import search_node
+from graphs.nodes.knowledge_search_node import knowledge_search_node
 from graphs.nodes.analysis_node import analysis_node
 from graphs.nodes.feishu_push_node import feishu_push_node
 
@@ -19,6 +20,7 @@ builder = StateGraph(
 
 # 添加节点
 builder.add_node("search_node", search_node)
+builder.add_node("knowledge_search_node", knowledge_search_node)
 builder.add_node(
     "analysis_node",
     analysis_node,
@@ -33,7 +35,8 @@ builder.add_node("feishu_push_node", feishu_push_node)
 builder.set_entry_point("search_node")
 
 # 添加边
-builder.add_edge("search_node", "analysis_node")
+builder.add_edge("search_node", "knowledge_search_node")
+builder.add_edge("knowledge_search_node", "analysis_node")
 builder.add_edge("analysis_node", "feishu_push_node")
 builder.add_edge("feishu_push_node", END)
 

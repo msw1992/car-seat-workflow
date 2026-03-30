@@ -31,9 +31,21 @@ class SearchNodeOutput(BaseModel):
     search_results: List[dict] = Field(..., description="搜索结果列表")
 
 
+class KnowledgeSearchNodeInput(BaseModel):
+    """知识库检索节点输入"""
+    search_results: List[dict] = Field(..., description="网络搜索结果列表")
+
+
+class KnowledgeSearchNodeOutput(BaseModel):
+    """知识库检索节点输出"""
+    search_results: List[dict] = Field(..., description="网络搜索结果列表")
+    knowledge_results: List[dict] = Field(default=[], description="知识库检索结果列表")
+
+
 class AnalysisNodeInput(BaseModel):
     """分析节点输入"""
-    search_results: List[dict] = Field(..., description="搜索结果列表")
+    search_results: List[dict] = Field(..., description="网络搜索结果列表")
+    knowledge_results: List[dict] = Field(default=[], description="知识库检索结果列表")
 
 
 class AnalysisNodeOutput(BaseModel):

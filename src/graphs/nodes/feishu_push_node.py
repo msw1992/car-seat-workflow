@@ -2,6 +2,7 @@
 import json
 from typing import Dict, Any
 import requests
+from datetime import datetime
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
 from coze_coding_utils.runtime_ctx.context import Context
@@ -33,13 +34,17 @@ def feishu_push_node(
     analysis_result = state.analysis_result
     raw_content = analysis_result.get("raw_content", "")
     search_count = analysis_result.get("search_count", 0)
+    knowledge_count = analysis_result.get("knowledge_count", 0)
     
-    # 构建推送内容
-    title = "🚗 每日汽车座椅产品规划资讯推送"
+    # 获取当前日期
+    current_date = datetime.now().strftime("%Y年%m月%d日")
+    
+    # 构建推送内容（增加当日日期）
+    title = f"🚗 汽车座椅产品规划日报 - {current_date}"
     
     # 使用富文本格式
     content_lines = [
-        [{"tag": "text", "text": f"📊 本次共分析 {search_count} 条资讯\n\n"}],
+        [{"tag": "text", "text": f"📊 本次共分析 {search_count} 条资讯，引用 {knowledge_count} 条历史知识\n\n"}],
         [{"tag": "text", "text": raw_content}]
     ]
     

@@ -40,9 +40,9 @@ def search_node(
             response = client.search(
                 query=query,
                 search_type="web",
-                count=5,
+                count=8,  # 每个查询返回8条结果
                 need_summary=True,
-                time_range="1d"  # 搜索最近1天的资讯
+                time_range="1w"  # 搜索最近一周的资讯
             )
             
             if response.web_items:
@@ -71,7 +71,7 @@ def search_node(
             seen_urls.add(url)
             unique_results.append(result)
     
-    # 限制结果数量，避免内容过多
-    final_results = unique_results[:15]
+    # 限制结果数量，扩大到20条
+    final_results = unique_results[:20]
     
     return SearchNodeOutput(search_results=final_results)
