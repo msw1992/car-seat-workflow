@@ -1,4 +1,5 @@
 """知识库检索节点 - 从长期记忆库检索相关内容"""
+import os
 from typing import List, Any
 from langchain_core.runnables import RunnableConfig
 from langgraph.runtime import Runtime
@@ -14,7 +15,7 @@ def knowledge_search_node(
 ) -> KnowledgeSearchNodeOutput:
     """
     title: 知识库检索
-    desc: 从Coze长期记忆库中检索与汽车座椅相关的历史知识和经验
+    desc: 从Coze长期记忆库Car_Seat中检索与汽车座椅相关的历史知识和经验
     integrations: knowledge
     """
     ctx = runtime.context
@@ -36,12 +37,16 @@ def knowledge_search_node(
     if search_keywords:
         query = " ".join(search_keywords[:3])  # 取前3个标题作为查询
     
+    # 从环境变量获取知识库名称，默认为 Car_Seat
+    knowledge_table = os.getenv("KNOWLEDGE_TABLE_NAME", "Car_Seat")
+    
     knowledge_results: List[Any] = []
     
     try:
-        # 从知识库检索相关内容
+        # 从指定的知识库检索相关内容
         response = client.search(
             query=query,
+            table_names=[knowledge_table],  # 指定知识库 Car_Seat
             top_k=10,  # 检索10条相关知识
             min_score=0.5  # 相似度阈值
         )
@@ -54,9 +59,14 @@ def knowledge_search_node(
                     "doc_id": chunk.doc_id if chunk.doc_id else ""
                 }
                 knowledge_results.append(knowledge_item)
+                
+            print(f"✅ 从知识库 '{knowledge_table}' 检索到 {len(knowledge_results)} 条相关知识")
+        else:
+            print(f"⚠️  知识库 '{knowledge_table}' 未检索到相关知识")
+            
     except Exception as e:
         # 记录错误但继续执行
-        print(f"知识库检索失败: {str(e)}")
+        print(f"❌ 知识库检索失败: {str(e)}")
         # 知识库检索失败不影响整体流程
     
     return KnowledgeSearchNodeOutput(

@@ -29,7 +29,7 @@
 
 ## 技能使用
 - 节点`search_node`使用技能 web-search
-- 节点`knowledge_search_node`使用技能 knowledge
+- 节点`knowledge_search_node`使用技能 knowledge（引用知识库：Car_Seat）
 - 节点`analysis_node`使用技能 llm
 - 节点`feishu_push_node`使用技能 feishu-message
 

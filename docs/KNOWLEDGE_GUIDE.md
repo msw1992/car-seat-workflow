@@ -4,17 +4,40 @@
 
 工作流已成功集成 **Coze 长期记忆库（知识库）** 功能！
 
+**默认引用知识库：`Car_Seat`**
+
 ---
 
-## 🎯 工作流程
+## 🎯 配置说明
 
+### 当前配置
+
+工作流默认从你的知识库 **Car_Seat** 中检索相关知识：
+
+```python
+# src/graphs/nodes/knowledge_search_node.py
+knowledge_table = os.getenv("KNOWLEDGE_TABLE_NAME", "Car_Seat")
+
+response = client.search(
+    query=query,
+    table_names=[knowledge_table],  # 指定知识库 Car_Seat
+    top_k=10,
+    min_score=0.5
+)
 ```
-搜索节点 → 知识库检索节点 → 分析节点 → 飞书推送节点
-    ↓            ↓               ↓
-  网络资讯    历史知识      结合两者分析
-    └────────────┴───────────────┘
-              ↓
-          综合报告
+
+### 修改知识库名称
+
+如果需要使用其他知识库，可以通过环境变量配置：
+
+```bash
+# 方式1：临时设置
+export KNOWLEDGE_TABLE_NAME="你的知识库名称"
+python src/main.py -m flow
+
+# 方式2：在启动脚本中设置
+export KNOWLEDGE_TABLE_NAME="你的知识库名称"
+bash start_scheduler.sh
 ```
 
 ---
