@@ -3,11 +3,12 @@ import os
 import time
 import json
 import logging
-import asyncio
 import requests
+import signal
+import sys
 from datetime import datetime, timedelta
 from typing import Optional
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 # 配置日志
@@ -33,13 +34,13 @@ class WorkflowScheduler:
             workflow_api_url: 工作流API地址
         """
         self.workflow_api_url = workflow_api_url
-        self.scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
+        self.scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
         self.execution_count = 0
         self.last_execution_time: Optional[str] = None
         
-    async def trigger_workflow(self):
+    def trigger_workflow(self):
         """
-        触发工作流执行
+        触发工作流执行（同步方法）
         """
         try:
             logger.info(f"开始触发工作流，时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -107,7 +108,13 @@ class WorkflowScheduler:
             
             # 保持服务运行
             try:
-                asyncio.get_event_loop().run_forever()
+                # 使用信号处理来保持进程运行
+                signal.signal(signal.SIGINT, self._signal_handler)
+                signal.signal(signal.SIGTERM, self._signal_handler)
+                
+                # 主线程保持运行
+                while True:
+                    time.sleep(1)
             except (KeyboardInterrupt, SystemExit):
                 self.stop()
                 
@@ -115,11 +122,18 @@ class WorkflowScheduler:
             logger.error(f"❌ 启动调度器失败: {str(e)}", exc_info=True)
             raise
     
+    def _signal_handler(self, signum, frame):
+        """信号处理器"""
+        logger.info(f"接收到信号 {signum}，准备停止服务...")
+        self.stop()
+        sys.exit(0)
+    
     def stop(self):
         """停止调度器"""
-        logger.info("正在停止调度服务...")
-        self.scheduler.shutdown()
-        logger.info("✅ 调度服务已停止")
+        if self.scheduler.running:
+            logger.info("正在停止调度服务...")
+            self.scheduler.shutdown()
+            logger.info("✅ 调度服务已停止")
 
 
 def main():
