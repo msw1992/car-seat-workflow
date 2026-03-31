@@ -85,6 +85,20 @@ python scripts/test_knowledge_access.py
 
 ---
 
+## 🔧 自动配置的平台环境变量
+
+以下环境变量已在 workflow 中自动配置，**无需手动设置**：
+
+| 环境变量名称 | 值 | 说明 |
+|------------|---|------|
+| `COZE_INTEGRATION_BASE_URL` | `https://integration.coze.cn` | Coze 集成服务地址 |
+| `COZE_LOOP_BASE_URL` | `https://api.coze.cn` | Coze API 地址 |
+| `COZE_OUTBOUND_AUTH_ENDPOINT` | `https://integration.coze.cn/api/v1/secret` | 认证端点 |
+
+这些是 Coze 平台的固定地址，已在 `.github/workflows/daily_push.yml` 中硬编码。
+
+---
+
 ## 📸 配置示例
 
 ### 添加 Secret 的界面

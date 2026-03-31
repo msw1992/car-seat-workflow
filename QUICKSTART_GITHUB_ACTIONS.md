@@ -73,6 +73,7 @@ GitHub仓库页面 → Settings → Secrets and variables → Actions
 - `KNOWLEDGE_TABLE_NAME` 是您在 Coze 平台创建的知识库名称
 - 当前知识库名称：`Car_Seat_20260330_152242`
 - 可通过 `cat data/knowledge_table.json` 查看当前知识库配置
+- Coze 平台固定 URL（如 `COZE_INTEGRATION_BASE_URL`）已在 workflow 中自动配置，无需手动设置
 - **详细配置说明：** [docs/GITHUB_SECRETS_CHECKLIST.md](docs/GITHUB_SECRETS_CHECKLIST.md)
 
 #### 配置示例截图
