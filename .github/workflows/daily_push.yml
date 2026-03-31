@@ -51,14 +51,50 @@ jobs:
           echo "❌ 错误：COZE_API_KEY 未配置"
           errors=$((errors + 1))
         else
-          # 验证 token 格式
-          if [[ "$COZE_API_KEY" == pat_* ]] || [[ "$COZE_API_KEY" == sat_* ]]; then
-            echo "✅ COZE_API_KEY 格式正确 (${COZE_API_KEY:0:10}...)"
+          # 详细诊断 token 格式
+          echo ""
+          echo "📋 COZE_API_KEY 详细诊断："
+          echo "   长度: ${#COZE_API_KEY} 字符"
+          echo "   前缀: ${COZE_API_KEY:0:15}..."
+          echo "   后缀: ...${COZE_API_KEY: -10}"
+          
+          # 检查前缀
+          if [[ "$COZE_API_KEY" == pat_* ]]; then
+            echo "   类型: 个人访问令牌 (pat_)"
+            echo "✅ 前缀格式正确"
+          elif [[ "$COZE_API_KEY" == sat_* ]]; then
+            echo "   类型: 服务访问令牌 (sat_)"
+            echo "✅ 前缀格式正确"
           else
-            echo "❌ 错误：COZE_API_KEY 格式不正确"
+            echo "❌ 错误：Token 前缀不正确"
             echo "   期望格式：pat_xxxxx 或 sat_xxxxx"
-            echo "   实际前缀：${COZE_API_KEY:0:10}..."
             errors=$((errors + 1))
+          fi
+          
+          # 检查非法字符
+          if echo "$COZE_API_KEY" | grep -q '[[:space:]]'; then
+            echo "❌ 错误：Token 包含空白字符（空格、制表符、换行符）"
+            errors=$((errors + 1))
+          fi
+          
+          if [[ "$COZE_API_KEY" == \"* ]] || [[ "$COZE_API_KEY" == \'* ]]; then
+            echo "❌ 错误：Token 以引号开头"
+            errors=$((errors + 1))
+          fi
+          
+          # 检查段数（用于诊断 JWT 格式）
+          token_body="${COZE_API_KEY:4}"
+          if [[ "$token_body" == *.* ]]; then
+            segment_count=$(echo "$token_body" | tr '.' '\n' | wc -l)
+            echo "   JWT 段数: $segment_count"
+            if [ "$segment_count" -eq 3 ]; then
+              echo "   ✅ JWT 格式正确（3段）"
+            else
+              echo "   ⚠️  JWT 格式段数异常"
+            fi
+          else
+            echo "   格式: 单段（非JWT）"
+            echo "   主体长度: ${#token_body} 字符"
           fi
         fi
         
