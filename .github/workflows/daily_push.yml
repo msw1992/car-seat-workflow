@@ -22,6 +22,15 @@ jobs:
     - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
+        
+        # 方案：从完整requirements.txt中移除无法安装的包
+        # 创建清理后的依赖文件
+        cat requirements.txt | grep -v -E "^(dbus-python|PyGObject|opencv-python)" > requirements-clean.txt
+        
+        # 安装所有依赖（允许部分失败）
+        pip install -r requirements-clean.txt || true
+        
+        # 确保核心依赖已安装
         pip install -r requirements-github-actions.txt
 
     - name: 运行工作流
