@@ -1,0 +1,43 @@
+name: 汽车座椅产品规划每日推送
+
+on:
+  schedule:
+    # 每天 8:30 (北京时间 UTC+8 = 0:30 UTC)
+    - cron: '30 0 * * *'
+  workflow_dispatch:  # 手动触发按钮
+
+jobs:
+  daily-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置 Python 环境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: 运行工作流
+      env:
+        # 从 GitHub Secrets 读取环境变量
+        COZE_API_KEY: ${{ secrets.COZE_API_KEY }}
+        COZE_WORKSPACE_ID: ${{ secrets.COOE_WORKSPACE_ID }}
+        FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        KNOWLEDGE_BASE_ID: ${{ secrets.KNOWLEDGE_BASE_ID }}
+      run: |
+        python src/main.py -m flow
+
+    - name: 上传执行日志
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: execution-logs
+        path: logs/
+        retention-days: 7

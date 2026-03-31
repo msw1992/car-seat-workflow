@@ -155,7 +155,48 @@ python scripts/reset_knowledge.py --execute
 
 ## 定时触发说明
 
-### 方案一：使用独立定时服务（推荐）
+### 🆓 免费部署方案（推荐）
+
+#### 方案一：GitHub Actions（最推荐）⭐⭐⭐⭐⭐
+
+**优势：**
+- ✅ 完全免费（每月2000分钟额度）
+- ✅ 零服务器维护
+- ✅ 代码更新自动部署
+- ✅ 支持手动触发测试
+
+**快速部署（10分钟）：**
+```bash
+# 1. 推送代码到 GitHub
+git add .
+git commit -m "feat: 添加定时任务"
+git push
+
+# 2. 在 GitHub 网页配置 Secrets
+Settings → Secrets → Actions → 添加环境变量
+
+# 3. 启用 Actions
+Actions → Enable workflows
+
+# 4. 测试运行
+Actions → Run workflow
+```
+
+**详细文档：**
+- [快速开始指南](../QUICKSTART_GITHUB_ACTIONS.md)
+- [免费方案对比](docs/FREE_DEPLOYMENT_GUIDE.md)
+
+#### 方案二：云函数（阿里云/腾讯云）
+
+**优势：**
+- ✅ 每月100万次免费调用
+- ✅ 无需管理服务器
+
+**部署步骤：** 详见 `docs/FREE_DEPLOYMENT_GUIDE.md`
+
+---
+
+### 方案三：使用独立定时服务（沙箱环境）
 
 **启动方式：**
 ```bash
@@ -163,9 +204,7 @@ python scripts/reset_knowledge.py --execute
 python src/main.py -m http -p 5000 &
 
 # 2. 启动定时调度服务
-bash start_scheduler.sh
-# 或直接运行
-python src/scheduler/scheduler_service.py
+bash start_scheduler_daemon.sh  # 后台运行，关闭网页也不会停止
 ```
 
 **配置项（环境变量）：**
