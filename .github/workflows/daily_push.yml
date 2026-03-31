@@ -33,6 +33,73 @@ jobs:
         # 确保核心依赖已安装
         pip install -r requirements-github-actions.txt
 
+    - name: 验证环境变量配置
+      env:
+        COZE_API_KEY: ${{ secrets.COZE_API_KEY }}
+        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
+        COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
+        FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
+      run: |
+        echo "🔍 验证环境变量配置..."
+        
+        # 检查必需的 Secrets 是否配置
+        errors=0
+        
+        # 检查 COZE_API_KEY
+        if [ -z "$COZE_API_KEY" ]; then
+          echo "❌ 错误：COZE_API_KEY 未配置"
+          errors=$((errors + 1))
+        else
+          # 验证 token 格式
+          if [[ "$COZE_API_KEY" == pat_* ]] || [[ "$COZE_API_KEY" == sat_* ]]; then
+            echo "✅ COZE_API_KEY 格式正确 (${COZE_API_KEY:0:10}...)"
+          else
+            echo "❌ 错误：COZE_API_KEY 格式不正确"
+            echo "   期望格式：pat_xxxxx 或 sat_xxxxx"
+            echo "   实际前缀：${COZE_API_KEY:0:10}..."
+            errors=$((errors + 1))
+          fi
+        fi
+        
+        # 检查其他必需的 Secrets
+        for secret_name in COZE_WORKLOAD_IDENTITY_API_KEY COZE_WORKSPACE_ID FEISHU_WEBHOOK_URL KNOWLEDGE_TABLE_NAME; do
+          eval "secret_value=\$$secret_name"
+          if [ -z "$secret_value" ]; then
+            echo "❌ 错误：$secret_name 未配置"
+            errors=$((errors + 1))
+          else
+            echo "✅ $secret_name 已配置"
+          fi
+        done
+        
+        # 如果有错误，显示帮助信息并退出
+        if [ $errors -gt 0 ]; then
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "⚠️  配置检查失败！发现 $errors 个错误"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📖 请按照以下步骤配置 GitHub Secrets："
+          echo ""
+          echo "1. 访问 GitHub 仓库 → Settings → Secrets and variables → Actions"
+          echo "2. 点击 'New repository secret' 添加以下 secrets："
+          echo ""
+          echo "   COZE_API_KEY: pat_xxxxx (从 Coze 平台获取)"
+          echo "   COZE_WORKLOAD_IDENTITY_API_KEY: pat_xxxxx (与 COZE_API_KEY 相同)"
+          echo "   COZE_WORKSPACE_ID: 12345678 (从 Coze 平台 URL 获取)"
+          echo "   FEISHU_WEBHOOK_URL: https://open.feishu.cn/xxx (从飞书群机器人获取)"
+          echo "   KNOWLEDGE_TABLE_NAME: Car_Seat_20260330_152242"
+          echo ""
+          echo "3. 详细说明请查看：QUICKSTART_GITHUB_ACTIONS.md"
+          echo ""
+          exit 1
+        fi
+        
+        echo ""
+        echo "✅ 所有环境变量配置正确！"
+        echo ""
+
     - name: 运行工作流
       env:
         # 用户配置的环境变量（从 Secrets 读取）

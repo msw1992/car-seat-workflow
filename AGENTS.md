@@ -182,9 +182,39 @@ Actions → Enable workflows
 Actions → Run workflow
 ```
 
+**⚠️ 关键配置：COZE_API_KEY**
+
+在 GitHub Actions 运行前，必须配置正确的 `COZE_API_KEY`：
+
+| Secret名称 | 值 | 获取方式 |
+|-----------|---|---------|
+| `COZE_API_KEY` | `pat_xxxxx` | ⭐ **见详细文档** |
+| `COZE_WORKLOAD_IDENTITY_API_KEY` | `pat_xxxxx` | **与上面相同** |
+| `COZE_WORKSPACE_ID` | `12345678` | Coze平台 URL 获取 |
+| `FEISHU_WEBHOOK_URL` | `https://...` | 飞书群机器人 |
+| `KNOWLEDGE_TABLE_NAME` | `Car_Seat_xxx` | 知识库名称 |
+
 **详细文档：**
 - [快速开始指南](../QUICKSTART_GITHUB_ACTIONS.md)
+- [COZE_API_KEY 获取指南](docs/COZE_API_KEY_GUIDE.md) ⭐ **最关键**
+- [GitHub Secrets 配置清单](docs/GITHUB_SECRETS_CHECKLIST.md)
 - [免费方案对比](docs/FREE_DEPLOYMENT_GUIDE.md)
+
+**常见错误：**
+```
+❌ token contains an invalid number of segments
+   → Token 格式错误，应以 pat_ 或 sat_ 开头
+
+❌ authentication is invalid
+   → Token 无效或过期，请重新创建
+```
+
+**诊断工具：**
+```bash
+# 本地验证 Token 格式
+export COZE_API_KEY="您的token"
+python scripts/diagnose_token.py
+```
 
 #### 方案二：云函数（阿里云/腾讯云）
 

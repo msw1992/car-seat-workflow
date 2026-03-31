@@ -61,15 +61,108 @@ GitHub仓库页面 → Settings → Secrets and variables → Actions
 
 | Secret名称 | 值 | 获取方式 |
 |-----------|---|---------|
-| `COZE_API_KEY` | `pat_xxxxx` | Coze平台 → 个人设置 → API Token |
+| `COZE_API_KEY` | `pat_xxxxx` | ⭐ **最关键！见下方详细说明** |
 | `COZE_WORKLOAD_IDENTITY_API_KEY` | `pat_xxxxx` | **与 COZE_API_KEY 相同** |
 | `COZE_WORKSPACE_ID` | `123456` | Coze平台工作空间ID |
 | `FEISHU_WEBHOOK_URL` | `https://open.feishu.cn/xxx` | 飞书群 → 设置 → 群机器人 → 添加机器人 |
 | `KNOWLEDGE_TABLE_NAME` | `Car_Seat_20260330_152242` | **知识库名称**（见下方说明） |
 
+---
+
+### 🔑 如何获取 COZE_API_KEY（最关键步骤）
+
+**⚠️ 这是最容易出错的步骤！请仔细阅读：**
+
+#### 方法 1：从 Coze 平台创建（推荐）
+
+```
+步骤 1：访问 Coze 平台
+├─ 国内用户：https://www.coze.cn
+└─ 国际用户：https://www.coze.com
+
+步骤 2：进入个人设置
+├─ 登录后，点击右上角头像
+└─ 选择「个人设置」或「Personal Settings」
+
+步骤 3：创建 API Token
+├─ 选择「API Token」标签页
+├─ 点击「创建新 Token」
+├─ 设置 Token 名称（如：github-actions-token）
+├─ ⚠️ 必须勾选以下权限：
+│  ├─ ✅ 搜索（Search）
+│  ├─ ✅ 知识库读取（Knowledge Read）
+│  ├─ ✅ 知识库写入（Knowledge Write）
+│  └─ ✅ 模型调用（Model）
+├─ 点击「创建」
+└─ ⚠️ 立即复制 token（关闭后无法再查看！）
+
+步骤 4：验证 Token 格式
+├─ 正确格式：pat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+├─ 错误示例：
+│  ├─ ❌ xxxxxxxxxxxxxxxxxxx（缺少 pat_ 前缀）
+│  ├─ ❌ "pat_xxxxx"（包含引号）
+│  ├─ ❌ pat_xxxxx\n（包含换行符）
+│  └─ ❌ Bearer pat_xxxxx（包含 Bearer）
+└─ 运行诊断脚本验证：python scripts/diagnose_token.py
+```
+
+#### Token 格式说明
+
+| 格式 | 说明 | 示例 |
+|-----|------|------|
+| `pat_xxxxx` | 个人访问令牌 | ✅ 正确 |
+| `sat_xxxxx` | 服务访问令牌 | ✅ 正确 |
+| JWT格式 | 3段用.分隔 | ✅ 正确 |
+| 其他格式 | 未知格式 | ❌ 错误 |
+
+#### ⚠️ 常见错误
+
+**错误信息：** `token contains an invalid number of segments`
+
+**原因：** Token 格式不正确
+
+**解决方法：**
+1. 检查 token 是否以 `pat_` 或 `sat_` 开头
+2. 确保 token 不包含引号、空格、换行符
+3. 直接复制粘贴，不要手动输入
+
+**验证命令：**
+```bash
+# 本地验证（需要先设置环境变量）
+export COZE_API_KEY="您的token"
+python scripts/diagnose_token.py
+```
+
+---
+
+### 📋 其他 Secrets 获取方式
+
+**COZE_WORKSPACE_ID：**
+```
+访问您的 Coze 工作空间
+URL 格式：https://www.coze.cn/workspace/12345678
+                                          ^^^^^^^^
+                                          这就是 Workspace ID
+```
+
+**FEISHU_WEBHOOK_URL：**
+```
+飞书群 → 设置 → 群机器人 → 添加机器人 → 自定义机器人
+↓
+复制 Webhook 地址
+```
+
+**KNOWLEDGE_TABLE_NAME：**
+```
+值：Car_Seat_20260330_152242
+（这是项目默认知识库名称，如果创建了新的请替换）
+```
+
+---
+
 **⚠️ 重要说明：**
 
-- `COZE_WORKLOAD_IDENTITY_API_KEY` 通常与 `COZE_API_KEY` 值相同
+- `COZE_WORKLOAD_IDENTITY_API_KEY` **必须**与 `COZE_API_KEY` 值相同
 - `KNOWLEDGE_TABLE_NAME` 是您在 Coze 平台创建的知识库名称
 - 当前知识库名称：`Car_Seat_20260330_152242`
 - 可通过 `cat data/knowledge_table.json` 查看当前知识库配置

@@ -8,21 +8,66 @@
 
 访问路径：`GitHub仓库 → Settings → Secrets and variables → Actions → New repository secret`
 
-### 1. COZE_API_KEY
+### 1. COZE_API_KEY ⭐⭐⭐ 最关键
 
 **名称：** `COZE_API_KEY`
 
-**获取方式：**
-1. 访问 Coze 平台
-2. 点击右上角头像 → 个人设置
-3. 选择 API Token 选项卡
-4. 创建或复制现有的 Token
+**获取方式（详细步骤）：**
 
-**格式示例：** `pat_xxxxxxxxxxxxxxxxxxxxxxxxx`
+#### 步骤 1：访问 Coze 平台
+- 国内用户：https://www.coze.cn
+- 国际用户：https://www.coze.com
 
-**权限要求：**
-- ✅ 读取知识库权限
-- ✅ 写入知识库权限（如果需要保存）
+#### 步骤 2：进入个人设置
+```
+登录 → 点击右上角头像 → 选择「个人设置」
+```
+
+#### 步骤 3：创建 API Token
+```
+个人设置 → API Token → 创建新 Token
+```
+
+#### 步骤 4：设置权限（必须勾选）
+- ✅ **搜索权限**（Search）
+- ✅ **知识库读取权限**（Knowledge Read）
+- ✅ **知识库写入权限**（Knowledge Write）
+- ✅ **模型调用权限**（Model）
+
+#### 步骤 5：复制 Token
+⚠️ **重要：Token 只显示一次，请立即复制保存！**
+
+**正确格式示例：**
+```
+pat_ABC123def456GHI789jkl012MNO345pqr678STU901vwx234
+```
+
+**格式说明：**
+| 格式类型 | 示例 | 是否正确 |
+|---------|------|---------|
+| `pat_xxxxx` | `pat_ABC123def...` | ✅ 正确（个人访问令牌）|
+| `sat_xxxxx` | `sat_ABC123def...` | ✅ 正确（服务访问令牌）|
+| JWT 格式 | `eyJhbGciOi...` | ✅ 正确（JSON Web Token）|
+| 无前缀 | `ABC123def...` | ❌ 错误 |
+| 包含引号 | `"pat_xxxxx"` | ❌ 错误 |
+| 包含空格 | `pat_xxxxx ` | ❌ 错误 |
+
+**验证方法：**
+```bash
+# 方法 1：运行诊断脚本
+export COZE_API_KEY="您的token"
+python scripts/diagnose_token.py
+
+# 方法 2：检查格式（本地）
+echo "$COZE_API_KEY" | grep -E "^pat_|^sat_"
+```
+
+**⚠️ 常见错误：**
+```
+错误信息：token contains an invalid number of segments
+原因：Token 格式不正确
+解决：确保 token 以 pat_ 或 sat_ 开头，不包含引号、空格等字符
+```
 
 ---
 
@@ -32,10 +77,16 @@
 
 **说明：**
 - 这是 Coze SDK 的认证密钥
-- **通常与 `COZE_API_KEY` 值相同**
+- **必须与 `COZE_API_KEY` 值完全相同**
 - 如果您的 `COZE_API_KEY` 是 `pat_xxxxx`，这个也填 `pat_xxxxx`
 
-**值：** 与 `COZE_API_KEY` 相同
+**值：** 与 `COZE_API_KEY` 完全相同
+
+**示例：**
+```
+COZE_API_KEY = pat_ABC123def456
+COZE_WORKLOAD_IDENTITY_API_KEY = pat_ABC123def456  # 相同！
+```
 
 ---
 
