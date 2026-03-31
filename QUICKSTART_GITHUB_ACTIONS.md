@@ -63,18 +63,17 @@ GitHub仓库页面 → Settings → Secrets and variables → Actions
 |-----------|---|---------|
 | `COZE_API_KEY` | `pat_xxxxx` | Coze平台 → 个人设置 → API Token |
 | `COZE_WORKLOAD_IDENTITY_API_KEY` | `pat_xxxxx` | **与 COZE_API_KEY 相同** |
-| `COZE_LOOP_API_TOKEN` | `pat_xxxxx` | **与 COZE_API_KEY 相同** |
 | `COZE_WORKSPACE_ID` | `123456` | Coze平台工作空间ID |
 | `FEISHU_WEBHOOK_URL` | `https://open.feishu.cn/xxx` | 飞书群 → 设置 → 群机器人 → 添加机器人 |
 | `KNOWLEDGE_TABLE_NAME` | `Car_Seat_20260330_152242` | **知识库名称**（见下方说明） |
 
 **⚠️ 重要说明：**
 
-- `COZE_WORKLOAD_IDENTITY_API_KEY` 和 `COZE_LOOP_API_TOKEN` 通常与 `COZE_API_KEY` 值相同
+- `COZE_WORKLOAD_IDENTITY_API_KEY` 通常与 `COZE_API_KEY` 值相同
 - `KNOWLEDGE_TABLE_NAME` 是您在 Coze 平台创建的知识库名称
 - 当前知识库名称：`Car_Seat_20260330_152242`
 - 可通过 `cat data/knowledge_table.json` 查看当前知识库配置
-- Coze 平台固定 URL（如 `COZE_INTEGRATION_BASE_URL`）已在 workflow 中自动配置，无需手动设置
+- Coze 平台固定 URL 和 CozeLoop 追踪已在 workflow 中自动配置，无需手动设置
 - **详细配置说明：** [docs/GITHUB_SECRETS_CHECKLIST.md](docs/GITHUB_SECRETS_CHECKLIST.md)
 
 #### 配置示例截图
