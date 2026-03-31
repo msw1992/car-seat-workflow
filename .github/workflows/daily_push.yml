@@ -39,10 +39,12 @@ jobs:
         COZE_API_KEY: ${{ secrets.COZE_API_KEY }}
         COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
         COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
+        COZE_LOOP_API_TOKEN: ${{ secrets.COZE_LOOP_API_TOKEN }}
         FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
         
         # Coze 平台固定配置（无需用户配置）
+        COZE_WORKSPACE_PATH: ${{ github.workspace }}
         COZE_INTEGRATION_BASE_URL: https://integration.coze.cn
         COZE_INTEGRATION_MODEL_BASE_URL: https://integration.coze.cn/api/v3
         COZE_LOOP_BASE_URL: https://api.coze.cn
