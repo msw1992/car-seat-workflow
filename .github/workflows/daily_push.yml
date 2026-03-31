@@ -42,6 +42,7 @@ jobs:
         KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
       run: |
         echo "🔍 验证环境变量配置..."
+        echo ""
         
         # 检查必需的 Secrets 是否配置
         errors=0
@@ -52,7 +53,6 @@ jobs:
           errors=$((errors + 1))
         else
           # 详细诊断 token 格式
-          echo ""
           echo "📋 COZE_API_KEY 详细诊断："
           echo "   长度: ${#COZE_API_KEY} 字符"
           echo "   前缀: ${COZE_API_KEY:0:15}..."
@@ -61,10 +61,10 @@ jobs:
           # 检查前缀
           if [[ "$COZE_API_KEY" == pat_* ]]; then
             echo "   类型: 个人访问令牌 (pat_)"
-            echo "✅ 前缀格式正确"
+            echo "✅ COZE_API_KEY 格式正确"
           elif [[ "$COZE_API_KEY" == sat_* ]]; then
             echo "   类型: 服务访问令牌 (sat_)"
-            echo "✅ 前缀格式正确"
+            echo "✅ COZE_API_KEY 格式正确"
           else
             echo "❌ 错误：Token 前缀不正确"
             echo "   期望格式：pat_xxxxx 或 sat_xxxxx"
@@ -81,31 +81,56 @@ jobs:
             echo "❌ 错误：Token 以引号开头"
             errors=$((errors + 1))
           fi
-          
-          # 检查段数（用于诊断 JWT 格式）
-          token_body="${COZE_API_KEY:4}"
-          if [[ "$token_body" == *.* ]]; then
-            segment_count=$(echo "$token_body" | tr '.' '\n' | wc -l)
-            echo "   JWT 段数: $segment_count"
-            if [ "$segment_count" -eq 3 ]; then
-              echo "   ✅ JWT 格式正确（3段）"
-            else
-              echo "   ⚠️  JWT 格式段数异常"
-            fi
-          else
-            echo "   格式: 单段（非JWT）"
-            echo "   主体长度: ${#token_body} 字符"
-          fi
         fi
         
+        echo ""
+        
+        # ⭐ 关键：检查 COZE_WORKSPACE_ID
+        if [ -z "$COZE_WORKSPACE_ID" ]; then
+          echo "❌ 错误：COZE_WORKSPACE_ID 未配置"
+          echo "   获取方式："
+          echo "   1. 访问 https://www.coze.cn"
+          echo "   2. 进入您的 workspace"
+          echo "   3. 从 URL 中获取 ID"
+          echo "      URL格式：https://www.coze.cn/workspace/12345678"
+          echo "                                              ^^^^^^^^"
+          echo "                                              这就是 Workspace ID"
+          errors=$((errors + 1))
+        else
+          echo "✅ COZE_WORKSPACE_ID 已配置: $COZE_WORKSPACE_ID"
+        fi
+        
+        echo ""
+        
         # 检查其他必需的 Secrets
-        for secret_name in COZE_WORKLOAD_IDENTITY_API_KEY COZE_WORKSPACE_ID FEISHU_WEBHOOK_URL KNOWLEDGE_TABLE_NAME; do
+        for secret_name in COZE_WORKLOAD_IDENTITY_API_KEY FEISHU_WEBHOOK_URL KNOWLEDGE_TABLE_NAME; do
           eval "secret_value=\$$secret_name"
           if [ -z "$secret_value" ]; then
             echo "❌ 错误：$secret_name 未配置"
             errors=$((errors + 1))
           else
-            echo "✅ $secret_name 已配置"
+            # 对敏感信息只显示前后部分
+            if [[ "$secret_name" == *"KEY"* ]] || [[ "$secret_name" == *"TOKEN"* ]] || [[ "$secret_name" == *"URL"* ]]; then
+              echo "✅ $secret_name 已配置 (${secret_value:0:20}...)"
+            else
+              echo "✅ $secret_name 已配置: $secret_value"
+            fi
+          fi
+        done
+        
+        # 检查其他必需的 Secrets
+        for secret_name in COZE_WORKLOAD_IDENTITY_API_KEY FEISHU_WEBHOOK_URL KNOWLEDGE_TABLE_NAME; do
+          eval "secret_value=\$$secret_name"
+          if [ -z "$secret_value" ]; then
+            echo "❌ 错误：$secret_name 未配置"
+            errors=$((errors + 1))
+          else
+            # 对敏感信息只显示前后部分
+            if [[ "$secret_name" == *"KEY"* ]] || [[ "$secret_name" == *"TOKEN"* ]] || [[ "$secret_name" == *"URL"* ]]; then
+              echo "✅ $secret_name 已配置 (${secret_value:0:20}...)"
+            else
+              echo "✅ $secret_name 已配置: $secret_value"
+            fi
           fi
         done
         
@@ -128,6 +153,36 @@ jobs:
           echo "   KNOWLEDGE_TABLE_NAME: Car_Seat_20260330_152242"
           echo ""
           echo "3. 详细说明请查看：QUICKSTART_GITHUB_ACTIONS.md"
+          echo ""
+          exit 1
+        fi
+        
+        echo ""
+        echo "✅ 所有环境变量配置正确！"
+        echo ""
+
+    - name: 运行工作流
+      env:
+        # 用户配置的环境变量（从 Secrets 读取）
+        COZE_API_KEY: ${{ secrets.COZE_API_KEY }}
+        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
+        COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
+        FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
+        
+        # Coze 平台固定配置（无需用户配置）
+        COZE_WORKSPACE_PATH: ${{ github.workspace }}
+        COZE_INTEGRATION_BASE_URL: https://integration.coze.cn
+        COZE_INTEGRATION_MODEL_BASE_URL: https://integration.coze.cn/api/v3
+        COZE_LOOP_BASE_URL: https://api.coze.cn
+        COZE_OUTBOUND_AUTH_ENDPOINT: https://integration.coze.cn/api/v1/secret
+        COZE_WORKLOAD_ACCESS_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
+        COZE_WORKLOAD_IDENTITY_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
+        
+        # 禁用 CozeLoop 追踪（沙箱环境外不可用）
+        COZELOOP_DISABLED: "true"
+      run: |
+        python src/main.py -m flow
           echo ""
           exit 1
         fi
