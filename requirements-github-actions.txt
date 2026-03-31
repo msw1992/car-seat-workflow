@@ -10,6 +10,7 @@ langchain==1.0.3
 langchain-core==1.0.2
 langchain-openai==1.0.1
 langgraph==1.0.2
+langsmith>=0.4.0
 
 # HTTP & API
 requests>=2.32.0
@@ -20,10 +21,18 @@ pydantic>=2.12.0
 python-dateutil>=2.9.0
 chardet>=5.2.0
 
+# 文件处理
+python-pptx>=1.0.0
+python-docx>=1.2.0
+openpyxl>=3.1.0
+pypdf>=6.4.0
+pillow>=10.0.0
+
 # 工具库
 python-dotenv>=1.0.0
 jinja2>=3.1.0
 
-# Web服务器（main.py导入需要）
+# Web服务器
 uvicorn>=0.38.0
 fastapi>=0.121.0
+starlette>=0.49.0
