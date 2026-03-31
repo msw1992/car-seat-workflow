@@ -62,12 +62,14 @@ GitHub仓库页面 → Settings → Secrets and variables → Actions
 | Secret名称 | 值 | 获取方式 |
 |-----------|---|---------|
 | `COZE_API_KEY` | `pat_xxxxx` | Coze平台 → 个人设置 → API Token |
+| `COZE_WORKLOAD_IDENTITY_API_KEY` | `pat_xxxxx` | **与 COZE_API_KEY 相同** |
 | `COZE_WORKSPACE_ID` | `123456` | Coze平台工作空间ID |
 | `FEISHU_WEBHOOK_URL` | `https://open.feishu.cn/xxx` | 飞书群 → 设置 → 群机器人 → 添加机器人 |
 | `KNOWLEDGE_TABLE_NAME` | `Car_Seat_20260330_152242` | **知识库名称**（见下方说明） |
 
 **⚠️ 重要说明：**
 
+- `COZE_WORKLOAD_IDENTITY_API_KEY` 通常与 `COZE_API_KEY` 值相同
 - `KNOWLEDGE_TABLE_NAME` 是您在 Coze 平台创建的知识库名称
 - 当前知识库名称：`Car_Seat_20260330_152242`
 - 可通过 `cat data/knowledge_table.json` 查看当前知识库配置

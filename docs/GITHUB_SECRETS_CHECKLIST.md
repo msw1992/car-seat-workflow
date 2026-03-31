@@ -4,7 +4,7 @@
 
 ---
 
-## 🔑 必需配置的 Secrets（4个）
+## 🔑 必需配置的 Secrets（5个）
 
 访问路径：`GitHub仓库 → Settings → Secrets and variables → Actions → New repository secret`
 
@@ -26,7 +26,20 @@
 
 ---
 
-### 2. COZE_WORKSPACE_ID
+### 2. COZE_WORKLOAD_IDENTITY_API_KEY ⭐ 重要
+
+**名称：** `COZE_WORKLOAD_IDENTITY_API_KEY`
+
+**说明：**
+- 这是 Coze SDK 的认证密钥
+- **通常与 `COZE_API_KEY` 值相同**
+- 如果您的 `COZE_API_KEY` 是 `pat_xxxxx`，这个也填 `pat_xxxxx`
+
+**值：** 与 `COZE_API_KEY` 相同
+
+---
+
+### 3. COZE_WORKSPACE_ID
 
 **名称：** `COZE_WORKSPACE_ID`
 
@@ -39,7 +52,7 @@
 
 ---
 
-### 3. FEISHU_WEBHOOK_URL
+### 4. FEISHU_WEBHOOK_URL
 
 **名称：** `FEISHU_WEBHOOK_URL`
 
@@ -53,7 +66,7 @@
 
 ---
 
-### 4. KNOWLEDGE_TABLE_NAME ⭐ 重要
+### 5. KNOWLEDGE_TABLE_NAME ⭐ 重要
 
 **名称：** `KNOWLEDGE_TABLE_NAME`
 
