@@ -1,0 +1,24 @@
+# GitHub Actions 轻量级依赖
+# 只包含工作流运行必需的核心依赖
+
+# Coze SDK
+coze-coding-dev-sdk>=0.5.11
+coze-coding-utils>=0.2.4
+
+# LangChain & LangGraph
+langchain==1.0.3
+langchain-core==1.0.2
+langchain-openai==1.0.1
+langgraph==1.0.2
+
+# HTTP & API
+requests>=2.32.0
+httpx>=0.28.0
+
+# 数据处理
+pydantic>=2.12.0
+python-dateutil>=2.9.0
+
+# 工具库
+python-dotenv>=1.0.0
+jinja2>=3.1.0
