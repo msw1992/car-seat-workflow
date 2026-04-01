@@ -21,8 +21,6 @@ import sys
 import base64
 import json
 import time
-import hashlib
-import hmac
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -32,7 +30,6 @@ try:
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
     from cryptography.hazmat.backends import default_backend
-    from cryptography.exceptions import InvalidSignature
     HAS_CRYPTO = True
 except ImportError:
     HAS_CRYPTO = False
@@ -48,9 +45,12 @@ def get_token_with_client_secret(client_id: str, client_secret: str) -> str:
         "https://api.coze.cn/.well-known/token"
     )
     
+    print(f"   Token Endpoint: {token_endpoint}")
+    
     # 构造 Basic Auth 凭证
     credentials = f"{client_id}:{client_secret}"
     encoded_credentials = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
+    print(f"   Basic Auth: {encoded_credentials[:30]}...")
     
     # 构造请求
     data = urllib.parse.urlencode({"grant_type": "client_credentials"}).encode("utf-8")
@@ -64,7 +64,7 @@ def get_token_with_client_secret(client_id: str, client_secret: str) -> str:
     req.add_header("Authorization", f"Basic {encoded_credentials}")
     req.add_header("X-Client-Sdk", "coze-coding-dev-sdk-python/0.5.0")
     
-    return _do_token_request(req)
+    return _do_token_request(req, "Basic Auth")
 
 
 def generate_jwt_token(client_id: str, private_key: str) -> str:
@@ -107,10 +107,10 @@ def generate_jwt_token(client_id: str, private_key: str) -> str:
     
     # 签名内容
     signing_content = f"{header_b64}.{payload_b64}"
+    print(f"   JWT Payload: {json.dumps(payload, indent=2)}")
     
     # 使用私钥签名
     try:
-        # 尝试加载 PEM 格式私钥
         if private_key.startswith('-----BEGIN'):
             key_obj = serialization.load_pem_private_key(
                 private_key.encode('utf-8'),
@@ -124,7 +124,6 @@ def generate_jwt_token(client_id: str, private_key: str) -> str:
                 backend=default_backend()
             )
         else:
-            # 尝试 base64 解码后加载
             decoded_key = base64.b64decode(private_key)
             key_obj = serialization.load_der_private_key(
                 decoded_key,
@@ -143,7 +142,10 @@ def generate_jwt_token(client_id: str, private_key: str) -> str:
     
     signature_b64 = base64.urlsafe_b64encode(signature).decode('utf-8').rstrip('=')
     
-    return f"{signing_content}.{signature_b64}"
+    jwt_token = f"{signing_content}.{signature_b64}"
+    print(f"   JWT 生成成功: {jwt_token[:50]}...")
+    
+    return jwt_token
 
 
 def get_token_with_private_key(client_id: str, private_key: str) -> str:
@@ -158,6 +160,8 @@ def get_token_with_private_key(client_id: str, private_key: str) -> str:
         "COZE_WORKLOAD_IDENTITY_TOKEN_ENDPOINT",
         "https://api.coze.cn/.well-known/token"
     )
+    
+    print(f"   Token Endpoint: {token_endpoint}")
     
     # 生成 JWT 断言
     jwt_assertion = generate_jwt_token(client_id, private_key)
@@ -177,14 +181,17 @@ def get_token_with_private_key(client_id: str, private_key: str) -> str:
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
     req.add_header("X-Client-Sdk", "coze-coding-dev-sdk-python/0.5.0")
     
-    return _do_token_request(req)
+    return _do_token_request(req, "JWT Bearer")
 
 
-def _do_token_request(req: urllib.request.Request) -> str:
+def _do_token_request(req: urllib.request.Request, auth_type: str) -> str:
     """执行 Token 请求"""
+    print(f"   发送 {auth_type} Token 请求...")
+    
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             result = json.loads(response.read().decode("utf-8"))
+            print(f"   响应: {json.dumps(result, ensure_ascii=False)[:200]}...")
             
             if result.get("code") == 0 and "data" in result:
                 token = result["data"].get("access_token")
@@ -197,11 +204,15 @@ def _do_token_request(req: urllib.request.Request) -> str:
         error_body = e.read().decode("utf-8") if e.fp else ""
         try:
             error_json = json.loads(error_body)
-            error_msg = error_json.get("msg", error_body)
+            error_msg = error_json.get("msg", error_json)
+            error_code = error_json.get("code", "N/A")
         except:
             error_msg = error_body
-        raise Exception(f"HTTP 错误 {e.code}: {error_msg}")
+            error_code = "N/A"
+        print(f"   HTTP {e.code}, Error Code: {error_code}, Message: {error_msg}")
+        raise Exception(f"HTTP {e.code}: {error_msg}")
     except Exception as e:
+        print(f"   请求异常: {str(e)}")
         raise Exception(f"获取 Token 失败: {str(e)}")
 
 
@@ -221,26 +232,35 @@ def main():
     client_secret = os.getenv("COZE_CLIENT_SECRET", "").strip()
     private_key = os.getenv("COZE_PRIVATE_KEY", "").strip()
     
+    print(f"Client ID 配置: {'✅' if client_id else '❌'}")
+    print(f"Client Secret 配置: {'✅' if client_secret else '❌'}")
+    print(f"Private Key 配置: {'✅' if private_key else '❌'}")
+    print()
+    
+    if client_id:
+        display_id = f"{client_id[:12]}...{client_id[-4:]}" if len(client_id) > 16 else client_id
+        print(f"   Client ID: {display_id}")
+        print(f"   Client ID 长度: {len(client_id)}")
+        print(f"   Client ID 开头: {client_id[:4] if client_id else 'N/A'}")
+    
     token = None
     auth_method = ""
     
     # 优先使用私钥认证
     if client_id and private_key:
-        print("🔐 检测到私钥配置，使用 JWT 断言认证...")
-        print(f"   Client ID: {client_id[:12]}...{client_id[-4:] if len(client_id) > 16 else ''}")
+        print("🔐 使用 JWT 断言认证...")
         try:
             token = get_token_with_private_key(client_id, private_key)
             auth_method = "Private Key JWT"
         except Exception as e:
-            print(f"❌ 私钥认证失败: {e}")
+            print(f"❌ JWT 认证失败: {e}")
             if not client_secret:
                 sys.exit(1)
             print("   降级尝试 Client Secret 认证...")
     
     # 降级使用 Client Secret
     if not token and client_id and client_secret:
-        print("🔐 检测到 Client Secret 配置，使用 Basic Auth...")
-        print(f"   Client ID: {client_id[:12]}...{client_id[-4:] if len(client_id) > 16 else ''}")
+        print("🔐 使用 Client Secret Basic Auth...")
         token = get_token_with_client_secret(client_id, client_secret)
         auth_method = "Client Secret"
     
@@ -249,11 +269,11 @@ def main():
         print("")
         print("请设置以下环境变量之一：")
         print("")
-        print("方式一：Client ID + Client Secret (Web 后端应用)")
+        print("方式一：Client ID + Client Secret")
         print("  export COZE_CLIENT_ID=your_client_id")
         print("  export COZE_CLIENT_SECRET=your_client_secret")
         print("")
-        print("方式二：Client ID + Private Key (服务类应用)")
+        print("方式二：Client ID + Private Key")
         print("  export COZE_CLIENT_ID=your_client_id")
         print("  export COZE_PRIVATE_KEY=\"$(cat private_key.pem)\"")
         print("")
@@ -269,11 +289,6 @@ def main():
     with open(token_file, "w") as f:
         f.write(token)
     print(f"   Token 已保存到: {token_file}")
-    
-    # 同时输出供 GitHub Actions 使用
-    print()
-    print(f"::add-mask::token")
-    print(f"::set-output name=token::{token}")
 
 
 if __name__ == "__main__":
