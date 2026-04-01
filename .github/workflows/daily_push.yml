@@ -1,10 +1,10 @@
 name: 汽车座椅产品规划每日推送
 
 on:
-  schedule:
-    # 每天 8:30 (北京时间 UTC+8 = 0:30 UTC)
-    - cron: '30 0 * * *'
   workflow_dispatch:  # 手动触发按钮
+  schedule:
+    # 每天 9:00 (北京时间 UTC+8 = 1:00 UTC)
+    - cron: '0 1 * * *'
 
 jobs:
   daily-push:
@@ -26,11 +26,30 @@ jobs:
         pip install -r requirements-clean.txt || true
         pip install -r requirements-github-actions.txt
 
+    - name: 获取 Coze Token
+      id: get_token
+      env:
+        # OAuth 凭证（从 Secrets 读取）
+        COZE_CLIENT_ID: ${{ secrets.COZE_CLIENT_ID }}
+        COZE_CLIENT_SECRET: ${{ secrets.COZE_CLIENT_SECRET }}
+      run: |
+        if [ -n "$COZE_CLIENT_ID" ] && [ -n "$COZE_CLIENT_SECRET" ]; then
+          echo "使用 OAuth 方式获取 Token..."
+          python scripts/get_coze_token.py
+          COZE_TOKEN=$(cat /tmp/coze_token.txt)
+          echo "COZE_WORKLOAD_IDENTITY_API_KEY=$COZE_TOKEN" >> $GITHUB_ENV
+        elif [ -n "${{ secrets.COZE_API_KEY }}" ]; then
+          echo "使用 PAT 方式..."
+          echo "COZE_WORKLOAD_IDENTITY_API_KEY=${{ secrets.COZE_API_KEY }}" >> $GITHUB_ENV
+        else
+          echo "❌ 未配置 Coze 凭证"
+          exit 1
+        fi
+
     - name: 验证环境变量并测试 Token
       env:
-        # 用户配置的环境变量（从 Secrets 读取）
-        COZE_API_KEY: ${{ secrets.COZE_API_KEY }}
-        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
+        # 使用上一步获取的 Token
+        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ env.COZE_WORKLOAD_IDENTITY_API_KEY }}
         COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
         FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
@@ -44,7 +63,7 @@ jobs:
         COZE_WORKLOAD_ACCESS_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
         COZE_WORKLOAD_IDENTITY_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
         
-        # ⭐ 关键：SDK 使用 COZE_PROJECT_SPACE_ID 而非 COZE_WORKSPACE_ID
+        # 关键：SDK 使用 COZE_PROJECT_SPACE_ID 而非 COZE_WORKSPACE_ID
         COZE_PROJECT_SPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
         
         # 禁用 CozeLoop 追踪（沙箱环境外不可用）
@@ -54,9 +73,8 @@ jobs:
 
     - name: 运行工作流
       env:
-        # 用户配置的环境变量（从 Secrets 读取）
-        COZE_API_KEY: ${{ secrets.COZE_API_KEY }}
-        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
+        # 使用上一步获取的 Token
+        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ env.COZE_WORKLOAD_IDENTITY_API_KEY }}
         COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
         FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
@@ -70,7 +88,7 @@ jobs:
         COZE_WORKLOAD_ACCESS_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
         COZE_WORKLOAD_IDENTITY_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
         
-        # ⭐ 关键：SDK 使用 COZE_PROJECT_SPACE_ID 而非 COZE_WORKSPACE_ID
+        # 关键：SDK 使用 COZE_PROJECT_SPACE_ID 而非 COZE_WORKSPACE_ID
         COZE_PROJECT_SPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
         
         # 禁用 CozeLoop 追踪（沙箱环境外不可用）
@@ -82,6 +100,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: execution-logs
+        name: execution-logs-${{ github.run_number }}
         path: logs/
-        retention-days: 7
+        retention-days: 14
