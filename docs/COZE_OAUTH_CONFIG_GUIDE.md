@@ -2,80 +2,96 @@
 
 ## 概述
 
-本指南帮助你在 Coze 平台创建 OAuth 应用，获取 `client_id` 和 `client_secret`，从而在 GitHub Actions 中独立运行工作流，**不再依赖沙箱环境**。
+本指南帮助你在 Coze 平台创建 OAuth 应用，获取 API 凭证，从而在 GitHub Actions 中独立运行工作流，**不再依赖沙箱环境**。
 
-## 为什么需要 OAuth 应用？
+## 两种应用类型对比
 
-- 沙箱环境的 Token 有时效性，断开后会导致 GitHub Actions 无法运行
-- 使用自己的 OAuth 应用，Token 由你自己控制
-- 支持在 GitHub Actions 中自动获取 Token，无需手动管理
+| 应用类型 | 认证方式 | GitHub Secrets 配置 |
+|---------|---------|---------------------|
+| **Web 后端应用** | Client ID + Client Secret | `COZE_CLIENT_ID` + `COZE_CLIENT_SECRET` |
+| **服务类应用** ⭐ | Client ID + Private Key | `COZE_CLIENT_ID` + `COZE_PRIVATE_KEY` |
 
-## 创建步骤
+**推荐**：选择 **服务类应用**（更适合 GitHub Actions 这类纯后端场景）
 
-### 1. 登录 Coze 平台
+---
 
-访问 [https://www.coze.cn](https://www.coze.cn) 并登录你的账号。
+## 方式一：服务类应用（推荐）
 
-### 2. 进入开发者设置
+### 1. 创建应用
 
-1. 点击右上角头像
-2. 选择 **"开放平台"** 或 **"开发者中心"**
-3. 找到 **"OAuth 应用"** 或 **"应用管理"**
+1. 登录 [Coze 平台](https://www.coze.cn)
+2. 进入 **开发者中心** → **授权** → **创建应用**
+3. 填写基本信息：
+   - 应用类型：**普通**
+   - 客户端类型：**服务类应用** ⭐
+4. 点击 **创建并继续**
 
-### 3. 创建 OAuth 应用
+### 2. 获取凭证
 
-1. 点击 **"创建应用"**
-2. 选择应用类型：**服务端应用 (Server-side App)**
-3. 填写应用信息：
-   - 应用名称：`GitHub Actions Token`
-   - 应用描述：`用于 GitHub Actions 自动获取 API Token`
-4. 完成创建
+在「配置」步骤中：
 
-### 4. 获取凭证
+1. **Client ID** - 在应用信息中可见
+2. **生成公钥/私钥** - 点击右上角 **「+ 创建 Key」**
+   - 私钥会下载到本地（记得保存！）
+   - 公钥会自动关联到应用
 
-创建应用后，你会获得：
-- **Client ID**：应用的唯一标识
-- **Client Secret**：应用密钥
+### 3. 复制私钥内容
 
-**重要**：Client Secret 只显示一次，请妥善保存！
+```bash
+# 查看私钥文件内容
+cat downloaded_private_key.pem
 
-### 5. 配置应用权限
+# 或将私钥内容设置为环境变量
+export COZE_PRIVATE_KEY="$(cat downloaded_private_key.pem)"
+```
 
-确保应用有权限访问：
-- 知识库 API
-- LLM API
-- 搜索 API
+**注意**：私钥内容是多行文本，需要完整复制。
 
-### 6. 获取 Workspace ID
+### 4. GitHub Secrets 配置
 
-如果尚未获取：
+| Secret 名称 | 值 |
+|------------|-----|
+| `COZE_CLIENT_ID` | 应用详情页中的 Client ID |
+| `COZE_PRIVATE_KEY` | 私钥文件的完整内容（多行） |
+| `COZE_WORKSPACE_ID` | Coze 工作空间 ID |
+| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL |
+| `KNOWLEDGE_TABLE_NAME` | 知识库名称 |
 
-1. 在 Coze 平台进入你的工作空间
-2. 点击 **"设置"** 或 **"工作空间设置"**
-3. 找到 **Workspace ID**（通常是一串数字）
+**配置 Private Key 时的注意事项**：
+- 私钥内容是多行文本，在 GitHub Secret 中输入时需要保持格式
+- 确保包含 `-----BEGIN PRIVATE KEY-----` 和 `-----END PRIVATE KEY-----`
+- 可以在终端中用 `cat private_key.pem | pbcopy` 复制
 
-## GitHub Secrets 配置
+---
 
-在 GitHub 仓库的 **Settings → Secrets and variables → Actions** 中添加以下 Secrets：
+## 方式二：Web 后端应用
 
-### 方式一：OAuth 凭证（推荐）
+### 1. 创建应用
 
-| Secret 名称 | 说明 | 示例值 |
-|-----------|------|-------|
-| `COZE_CLIENT_ID` | OAuth 应用 Client ID | `dmplxxxxxxxxxx` |
-| `COZE_CLIENT_SECRET` | OAuth 应用 Client Secret | `MwJ8Rx...` |
-| `COZE_WORKSPACE_ID` | Coze 工作空间 ID | `123456789` |
-| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL | `https://open.feishu.cn/...` |
-| `KNOWLEDGE_TABLE_NAME` | 知识库名称 | `汽车座椅知识库` |
+1. 登录 [Coze 平台](https://www.coze.cn)
+2. 进入 **开发者中心** → **授权** → **创建应用**
+3. 填写基本信息：
+   - 应用类型：**普通**
+   - 客户端类型：**Web 后端应用**
+4. 点击 **创建并继续**
 
-### 方式二：直接使用 PAT（如果 Coze 支持）
+### 2. 获取凭证
 
-| Secret 名称 | 说明 | 示例值 |
-|-----------|------|-------|
-| `COZE_API_KEY` | Personal Access Token | `pat_xxxxxxxxxx` |
-| `COZE_WORKSPACE_ID` | Coze 工作空间 ID | `123456789` |
-| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL | `https://open.feishu.cn/...` |
-| `KNOWLEDGE_TABLE_NAME` | 知识库名称 | `汽车座椅知识库` |
+在「配置」步骤中，你会直接获得：
+- **Client ID**
+- **Client Secret**（记得保存，只显示一次）
+
+### 3. GitHub Secrets 配置
+
+| Secret 名称 | 值 |
+|------------|-----|
+| `COZE_CLIENT_ID` | Client ID |
+| `COZE_CLIENT_SECRET` | Client Secret |
+| `COZE_WORKSPACE_ID` | Coze 工作空间 ID |
+| `FEISHU_WEBHOOK_URL` | 飞书 Webhook URL |
+| `KNOWLEDGE_TABLE_NAME` | 知识库名称 |
+
+---
 
 ## 工作流程
 
@@ -83,28 +99,28 @@
 GitHub Actions 触发
         │
         ▼
-┌───────────────────────┐
-│  检查 COZE_CLIENT_ID  │
-│  和 COZE_CLIENT_SECRET│
-└───────────┬───────────┘
-            │
-            ▼ (如果配置了 OAuth)
-┌───────────────────────┐
-│  调用 OAuth Token     │
-│  端点获取 Access Token│
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│  设置环境变量         │
-│  COZE_WORKLOAD_...    │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│  运行主工作流         │
-│  (搜索→分析→推送)     │
-└───────────────────────┘
+┌───────────────────────────────┐
+│  检查认证配置                  │
+│  (优先私钥 > Client Secret)  │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│  调用 Token 端点获取 Access    │
+│  Token (JWT 断言或 Basic Auth) │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│  设置 COZE_WORKLOAD_...       │
+│  环境变量                      │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│  运行主工作流                  │
+│  (搜索→分析→推送)             │
+└───────────────────────────────┘
 ```
 
 ## 定时任务
@@ -118,34 +134,55 @@ schedule:
 
 ## 常见问题
 
-### Q1: OAuth 应用创建失败？
+### Q1: 服务类应用没有 Client Secret？
 
-检查是否具有创建应用的权限。可能需要企业版或特定的开发者权限。
+正常！服务类应用使用 **公钥/私钥** 替代 Client Secret 进行认证。
 
-### Q2: 获取 Token 失败？
+### Q2: 私钥格式是什么样的？
 
-1. 检查 Client ID 和 Client Secret 是否正确
-2. 确认 OAuth 应用已激活
-3. 检查应用权限是否足够
+私钥文件应该以 `-----BEGIN PRIVATE KEY-----` 开头，例如：
 
-### Q3: 可以同时配置 OAuth 和 PAT 吗？
+```
+-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+...（多行 base64 编码内容）...
+-----END PRIVATE KEY-----
+```
 
-可以！workflow 会优先使用 OAuth 凭证，如果 OAuth 凭证缺失，则降级使用 PAT。
+### Q3: GitHub Secret 中如何设置多行私钥？
 
-### Q4: Token 会过期吗？
+在 GitHub 网页上添加 Secret 时：
+1. 点击 **New repository secret**
+2. Name 输入 `COZE_PRIVATE_KEY`
+3. Value 区域需要粘贴私钥的**完整内容**（包括 `-----BEGIN...` 和 `-----END...`）
 
-OAuth Access Token 有效期通常为 **24 小时**。workflow 每次运行前会自动获取新 Token，所以无需担心过期问题。
+如果直接在终端设置：
+```bash
+# 使用单行（所有换行符用 \n 表示）
+gh secret set COZE_PRIVATE_KEY --body "$(cat key.pem | tr '\n' ' ')"
+
+# 或者使用文件
+gh secret set COZE_PRIVATE_KEY < key.pem
+```
+
+### Q4: 可以同时配置多种认证方式吗？
+
+可以！workflow 会按优先级自动选择：
+1. `COZE_CLIENT_ID` + `COZE_PRIVATE_KEY` (优先)
+2. `COZE_CLIENT_ID` + `COZE_CLIENT_SECRET`
+3. `COZE_API_KEY` (PAT，降级)
+
+### Q5: 获取 Token 失败？
+
+1. 检查 Client ID 是否正确
+2. 确认私钥与应用已正确关联
+3. 检查应用是否已激活
+4. 查看 GitHub Actions 日志中的具体错误信息
 
 ## 验证配置
 
 手动触发 workflow 后，检查日志：
 
-1. 如果看到 `使用 OAuth 方式获取 Token...`，说明正在使用 OAuth
-2. 如果看到 `Token 获取成功！`，说明 Token 获取正常
+1. 如果看到 `使用 Private Key JWT 认证...`，说明正在使用私钥认证
+2. 如果看到 `Token 获取成功！`，说明认证正常
 3. 后续工作流节点正常运行
-
-## 安全建议
-
-1. **不要泄露 Client Secret**：它是应用的密码，只能你自己知道
-2. **定期轮换**：建议每隔几个月更新 Client Secret
-3. **最小权限**：只授予应用必要的 API 权限

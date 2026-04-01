@@ -22,6 +22,7 @@ jobs:
     - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
+        pip install cryptography
         cat requirements.txt | grep -v -E "^(dbus-python|PyGObject|opencv-python)" > requirements-clean.txt
         pip install -r requirements-clean.txt || true
         pip install -r requirements-github-actions.txt
@@ -29,20 +30,36 @@ jobs:
     - name: 获取 Coze Token
       id: get_token
       env:
-        # OAuth 凭证（从 Secrets 读取）
+        # 方式一：Client ID + Client Secret (Web 后端应用)
         COZE_CLIENT_ID: ${{ secrets.COZE_CLIENT_ID }}
         COZE_CLIENT_SECRET: ${{ secrets.COZE_CLIENT_SECRET }}
+        # 方式二：Client ID + Private Key (服务类应用)
+        COZE_PRIVATE_KEY: ${{ secrets.COZE_PRIVATE_KEY }}
       run: |
-        if [ -n "$COZE_CLIENT_ID" ] && [ -n "$COZE_CLIENT_SECRET" ]; then
-          echo "使用 OAuth 方式获取 Token..."
+        echo "检查 Coze 认证配置..."
+        
+        # 优先尝试私钥认证
+        if [ -n "$COZE_CLIENT_ID" ] && [ -n "$COZE_PRIVATE_KEY" ]; then
+          echo "使用 Private Key JWT 认证 (服务类应用)..."
           python scripts/get_coze_token.py
           COZE_TOKEN=$(cat /tmp/coze_token.txt)
           echo "COZE_WORKLOAD_IDENTITY_API_KEY=$COZE_TOKEN" >> $GITHUB_ENV
+        # 降级使用 Client Secret
+        elif [ -n "$COZE_CLIENT_ID" ] && [ -n "$COZE_CLIENT_SECRET" ]; then
+          echo "使用 Client Secret Basic Auth (Web 后端应用)..."
+          python scripts/get_coze_token.py
+          COZE_TOKEN=$(cat /tmp/coze_token.txt)
+          echo "COZE_WORKLOAD_IDENTITY_API_KEY=$COZE_TOKEN" >> $GITHUB_ENV
+        # 降级使用 PAT
         elif [ -n "${{ secrets.COZE_API_KEY }}" ]; then
-          echo "使用 PAT 方式..."
+          echo "使用 PAT 认证..."
           echo "COZE_WORKLOAD_IDENTITY_API_KEY=${{ secrets.COZE_API_KEY }}" >> $GITHUB_ENV
         else
-          echo "❌ 未配置 Coze 凭证"
+          echo "❌ 未配置任何 Coze 凭证"
+          echo "请配置以下之一："
+          echo "  - COZE_CLIENT_ID + COZE_PRIVATE_KEY (服务类应用，推荐)"
+          echo "  - COZE_CLIENT_ID + COZE_CLIENT_SECRET (Web 后端应用)"
+          echo "  - COZE_API_KEY (PAT)"
           exit 1
         fi
 
