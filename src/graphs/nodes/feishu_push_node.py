@@ -10,12 +10,28 @@ from graphs.state import FeishuPushNodeInput, FeishuPushNodeOutput
 
 
 def get_webhook_url() -> str:
-    """获取飞书webhook URL"""
-    from coze_workload_identity import Client
-    client = Client()
-    wechat_bot_credential = client.get_integration_credential("integration-feishu-message")
-    webhook_url = json.loads(wechat_bot_credential)["webhook_url"]
-    return webhook_url
+    """获取飞书webhook URL
+    
+    优先级：
+    1. 环境变量 FEISHU_WEBHOOK_URL（GitHub Actions 使用）
+    2. coze_workload_identity（沙箱环境）
+    """
+    import os
+    
+    # 优先使用环境变量（GitHub Actions）
+    webhook_url = os.getenv("FEISHU_WEBHOOK_URL")
+    if webhook_url:
+        return webhook_url
+    
+    # 降级使用 coze_workload_identity（沙箱环境）
+    try:
+        from coze_workload_identity import Client
+        client = Client()
+        wechat_bot_credential = client.get_integration_credential("integration-feishu-message")
+        webhook_url = json.loads(wechat_bot_credential)["webhook_url"]
+        return webhook_url
+    except Exception:
+        raise ValueError("未配置飞书 Webhook URL，请设置环境变量 FEISHU_WEBHOOK_URL")
 
 
 def feishu_push_node(
