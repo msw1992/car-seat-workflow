@@ -3,8 +3,8 @@ name: 汽车座椅产品规划每日推送
 on:
   workflow_dispatch:  # 手动触发按钮
   schedule:
-    # 每天 9:00 (北京时间 UTC+8 = 1:00 UTC)
-    - cron: '0 1 * * *'
+    # 每天 9:35 (北京时间 UTC+8 = 1:35 UTC)
+    - cron: '35 1 * * *'
 
 jobs:
   daily-push:
@@ -27,39 +27,15 @@ jobs:
         pip install -r requirements-clean.txt || true
         pip install -r requirements-github-actions.txt
 
-    - name: 获取 Coze Token
-      id: get_token
+    - name: 配置 Coze Token
       env:
-        # 方式一：Client ID + Client Secret (Web 后端应用)
-        COZE_CLIENT_ID: ${{ secrets.COZE_CLIENT_ID }}
-        COZE_CLIENT_SECRET: ${{ secrets.COZE_CLIENT_SECRET }}
-        # 方式二：Client ID + Private Key (服务类应用)
-        COZE_PRIVATE_KEY: ${{ secrets.COZE_PRIVATE_KEY }}
+        # 沙箱 dmpl 格式 Token（直接使用）
+        COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
       run: |
-        echo "检查 Coze 认证配置..."
-        
-        # 优先尝试私钥认证
-        if [ -n "$COZE_CLIENT_ID" ] && [ -n "$COZE_PRIVATE_KEY" ]; then
-          echo "使用 Private Key JWT 认证 (服务类应用)..."
-          python scripts/get_coze_token.py
-          COZE_TOKEN=$(cat /tmp/coze_token.txt)
-          echo "COZE_WORKLOAD_IDENTITY_API_KEY=$COZE_TOKEN" >> $GITHUB_ENV
-        # 降级使用 Client Secret
-        elif [ -n "$COZE_CLIENT_ID" ] && [ -n "$COZE_CLIENT_SECRET" ]; then
-          echo "使用 Client Secret Basic Auth (Web 后端应用)..."
-          python scripts/get_coze_token.py
-          COZE_TOKEN=$(cat /tmp/coze_token.txt)
-          echo "COZE_WORKLOAD_IDENTITY_API_KEY=$COZE_TOKEN" >> $GITHUB_ENV
-        # 降级使用 PAT
-        elif [ -n "${{ secrets.COZE_API_KEY }}" ]; then
-          echo "使用 PAT 认证..."
-          echo "COZE_WORKLOAD_IDENTITY_API_KEY=${{ secrets.COZE_API_KEY }}" >> $GITHUB_ENV
+        if [ -n "$COZE_WORKLOAD_IDENTITY_API_KEY" ]; then
+          echo "✅ 使用沙箱 Token"
         else
-          echo "❌ 未配置任何 Coze 凭证"
-          echo "请配置以下之一："
-          echo "  - COZE_CLIENT_ID + COZE_PRIVATE_KEY (服务类应用，推荐)"
-          echo "  - COZE_CLIENT_ID + COZE_CLIENT_SECRET (Web 后端应用)"
-          echo "  - COZE_API_KEY (PAT)"
+          echo "❌ 未配置 COZE_WORKLOAD_IDENTITY_API_KEY"
           exit 1
         fi
 
