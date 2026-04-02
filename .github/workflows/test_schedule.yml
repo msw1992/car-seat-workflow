@@ -1,6 +1,8 @@
 name: 定时任务测试
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: '*/5 * * * *'  # 每5分钟测试一次
   workflow_dispatch:
