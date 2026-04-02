@@ -34,6 +34,7 @@ jobs:
       run: |
         if [ -n "$COZE_WORKLOAD_IDENTITY_API_KEY" ]; then
           echo "✅ 使用沙箱 Token"
+          echo "COZE_WORKLOAD_IDENTITY_API_KEY=$COZE_WORKLOAD_IDENTITY_API_KEY" >> $GITHUB_ENV
         else
           echo "❌ 未配置 COZE_WORKLOAD_IDENTITY_API_KEY"
           exit 1
