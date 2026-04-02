@@ -1,0 +1,14 @@
+name: schedule-test-clean
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: echo time
+        run: echo "schedule test $(date)"
