@@ -3,8 +3,8 @@ name: 汽车座椅产品规划每日推送
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: '35 1 * * *'  # 每天 UTC 1:35 = 北京时间 9:35
+  repository_dispatch:
+    types: [daily-trigger]
   workflow_dispatch:  # 手动触发按钮
 
 jobs:
@@ -30,7 +30,6 @@ jobs:
 
     - name: 配置 Coze Token
       env:
-        # 沙箱 dmpl 格式 Token（直接使用）
         COZE_WORKLOAD_IDENTITY_API_KEY: ${{ secrets.COZE_WORKLOAD_IDENTITY_API_KEY }}
       run: |
         if [ -n "$COZE_WORKLOAD_IDENTITY_API_KEY" ]; then
@@ -43,13 +42,10 @@ jobs:
 
     - name: 验证环境变量并测试 Token
       env:
-        # 使用上一步获取的 Token
         COZE_WORKLOAD_IDENTITY_API_KEY: ${{ env.COZE_WORKLOAD_IDENTITY_API_KEY }}
         COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
         FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
-        
-        # Coze 平台固定配置（无需用户配置）
         COZE_WORKSPACE_PATH: ${{ github.workspace }}
         COZE_INTEGRATION_BASE_URL: https://integration.coze.cn
         COZE_INTEGRATION_MODEL_BASE_URL: https://integration.coze.cn/api/v3
@@ -57,24 +53,17 @@ jobs:
         COZE_OUTBOUND_AUTH_ENDPOINT: https://integration.coze.cn/api/v1/secret
         COZE_WORKLOAD_ACCESS_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
         COZE_WORKLOAD_IDENTITY_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
-        
-        # 关键：SDK 使用 COZE_PROJECT_SPACE_ID 而非 COZE_WORKSPACE_ID
         COZE_PROJECT_SPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
-        
-        # 禁用 CozeLoop 追踪（沙箱环境外不可用）
         COZELOOP_DISABLED: "true"
       run: |
         python scripts/minimal_token_test.py
 
     - name: 运行工作流
       env:
-        # 使用上一步获取的 Token
         COZE_WORKLOAD_IDENTITY_API_KEY: ${{ env.COZE_WORKLOAD_IDENTITY_API_KEY }}
         COZE_WORKSPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
         FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
         KNOWLEDGE_TABLE_NAME: ${{ secrets.KNOWLEDGE_TABLE_NAME }}
-        
-        # Coze 平台固定配置（无需用户配置）
         COZE_WORKSPACE_PATH: ${{ github.workspace }}
         COZE_INTEGRATION_BASE_URL: https://integration.coze.cn
         COZE_INTEGRATION_MODEL_BASE_URL: https://integration.coze.cn/api/v3
@@ -82,11 +71,7 @@ jobs:
         COZE_OUTBOUND_AUTH_ENDPOINT: https://integration.coze.cn/api/v1/secret
         COZE_WORKLOAD_ACCESS_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
         COZE_WORKLOAD_IDENTITY_TOKEN_ENDPOINT: https://api.coze.cn/.well-known/token
-        
-        # 关键：SDK 使用 COZE_PROJECT_SPACE_ID 而非 COZE_WORKSPACE_ID
         COZE_PROJECT_SPACE_ID: ${{ secrets.COZE_WORKSPACE_ID }}
-        
-        # 禁用 CozeLoop 追踪（沙箱环境外不可用）
         COZELOOP_DISABLED: "true"
       run: |
         python src/main.py -m flow
