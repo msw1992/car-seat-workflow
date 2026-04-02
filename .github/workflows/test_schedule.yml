@@ -1,13 +1,13 @@
-name: Daily Push Schedule
+name: 定时任务测试
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'  # 每5分钟测试一次
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Test
-      run: echo "Schedule test success! $(date)"
+    - name: 测试
+      run: echo "定时任务测试成功！$(date)"
