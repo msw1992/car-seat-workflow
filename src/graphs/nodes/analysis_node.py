@@ -46,10 +46,12 @@ def analysis_node(
         snippet = result.get("snippet", "")
         summary = result.get("summary", "")
         site_name = result.get("site_name", "")
+        publish_time = result.get("publish_time", "未知时间")
         
         search_content += f"\n【资讯{idx}】\n"
         search_content += f"标题：{title}\n"
         search_content += f"来源：{site_name}\n"
+        search_content += f"发布时间：{publish_time}\n"
         search_content += f"链接：{url}\n"
         search_content += f"摘要：{snippet}\n"
         if summary:

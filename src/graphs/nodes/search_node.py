@@ -18,15 +18,17 @@ def is_within_time_range(publish_time: str, days: int) -> bool:
         days: 天数阈值
     
     Returns:
-        bool: 是否在时间范围内
+        bool: 是否在时间范围内，无法解析时间返回 False（严格过滤）
     """
     if not publish_time:
-        return True  # 如果没有时间信息，暂时保留
+        return False  # 严格过滤：没有时间信息则丢弃
     
     try:
         # 尝试解析多种时间格式
         time_formats = [
             "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S",
             "%Y年%m月%d日",
             "%Y/%m/%d",
             "%Y.%m.%d"
@@ -35,22 +37,22 @@ def is_within_time_range(publish_time: str, days: int) -> bool:
         pub_date = None
         for fmt in time_formats:
             try:
-                pub_date = datetime.strptime(publish_time, fmt)
+                pub_date = datetime.strptime(publish_time[:len(datetime.now().strftime(fmt))], fmt)
                 break
             except ValueError:
                 continue
         
         if not pub_date:
-            return True  # 解析失败，暂时保留
+            return False  # 严格过滤：解析失败则丢弃
         
         # 计算时间差
         now = datetime.now()
         time_diff = (now - pub_date).days
         
-        return time_diff <= days
+        return 0 <= time_diff <= days  # 必须是过去的时间，且在范围内
         
     except Exception:
-        return True  # 异常情况，暂时保留
+        return False  # 严格过滤：异常情况丢弃
 
 
 def search_node(
