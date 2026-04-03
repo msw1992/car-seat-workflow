@@ -82,8 +82,8 @@ def search_node(
     target_count = 20
     
     # 定义时间范围策略（优先级从高到低）
-    time_ranges = ["1w", "1m"]  # 一周 -> 一个月
-    time_range_days = {"1w": 7, "1m": 30}
+    time_ranges = ["1w", "1m", "3m"]  # 一周 -> 一个月 -> 三个月
+    time_range_days = {"1w": 7, "1m": 30, "3m": 90}
     
     # 收集所有搜索结果
     all_results: List[Any] = []
