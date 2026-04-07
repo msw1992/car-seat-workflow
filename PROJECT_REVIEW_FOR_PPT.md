@@ -299,7 +299,36 @@ GitHub Actions 中，Secrets 注入的环境变量需要在步骤中显式导出
 
 ---
 
-##### 问题三：cozeloop 追踪报错 401
+##### 问题三：Token 格式不兼容
+
+**现象**: 
+尝试使用 Coze 平台的 OAuth 格式 Token 和 PAT 格式 Token，但 API 调用始终失败
+
+**排查过程**:
+1. 尝试 OAuth 格式 Token（Base64 编码）→ 认证失败
+2. 尝试 PAT 格式 Token → 不被 API 支持
+3. 多次调整配置 → 仍然无法正常工作
+
+**根因**: 
+Coze API 对 Token 格式有特定要求，常规 Token 格式在沙箱环境外无法正常使用
+
+**解决方案：使用沙箱环境的 dmpl 格式 Token**
+
+**方案说明**:
+- 直接使用沙箱环境提供的 `COZE_WORKLOAD_IDENTITY_API_KEY`
+- 该 Token 为 `dmpl` 格式，可直接用于 GitHub Actions
+- 无需额外配置，从沙箱环境变量获取即可
+
+**关键发现**:
+| 尝试方案 | 结果 |
+|---------|------|
+| OAuth Token | ❌ 认证失败 |
+| PAT Token | ❌ 不支持 |
+| **沙箱 dmpl Token** | ✅ 成功 |
+
+---
+
+##### 问题四：cozeloop 追踪报错 401
 
 **现象**: 
 workflow 执行过程中出现 401 认证错误
@@ -312,7 +341,7 @@ workflow 执行过程中出现 401 认证错误
 
 ---
 
-##### 问题四：SDK 环境变量命名
+##### 问题五：SDK 环境变量命名
 
 **现象**: 
 知识库操作失败，提示 workspace_id 无效
@@ -325,7 +354,7 @@ SDK 使用 `COZE_PROJECT_SPACE_ID` 获取 workspace_id，而非 `COZE_WORKSPACE_
 
 ---
 
-##### 问题五：依赖编译失败
+##### 问题六：依赖编译失败
 
 **现象**: 
 GitHub Actions 环境中部分依赖包安装失败
